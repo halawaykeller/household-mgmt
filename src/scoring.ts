@@ -68,10 +68,10 @@ export function summarize(tasks: Task[], weights: AppState['weights']): ScoreSum
   const meShare      = total > 0 ? (mePoints      / total) * 100 : 50;
   const partnerShare = total > 0 ? (partnerPoints / total) * 100 : 50;
 
-  // Beam tilts toward the heavier side, capped at ±9°.
-  // Positive angle = me side is heavier (beam tilts left down).
-  const shareDiff = meShare - partnerShare;
-  const beamAngleDeg = Math.max(-9, Math.min(9, shareDiff * 0.18));
+  // Beam tilts toward the heavier side, capped at ±9°. Formula from mockup:
+  // (fraction - 0.5) * 26, where fraction is me's share as 0–1.
+  // Reaches ±9° at roughly 85%/15%, so extreme imbalance pegs the beam.
+  const beamAngleDeg = Math.max(-9, Math.min(9, (meShare / 100 - 0.5) * 26));
 
   return {
     me:      { loadPoints: mePoints,      monthlyMinutes: meMinutes,      sharePercent: meShare },

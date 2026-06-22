@@ -77,8 +77,7 @@ def summarize(tasks: list[dict], weights: dict) -> ScoreSummary:
     me_share      = (me_points      / total * 100) if total > 0 else 50.0
     partner_share = (partner_points / total * 100) if total > 0 else 50.0
 
-    share_diff = me_share - partner_share
-    beam_angle = max(-9.0, min(9.0, share_diff * 0.18))
+    beam_angle = max(-9.0, min(9.0, (me_share / 100 - 0.5) * 26))
 
     return ScoreSummary(
         me_points=me_points,
