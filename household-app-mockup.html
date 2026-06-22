@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Household — Align, Score, Decide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#E9EBE4;--ink:#1E2420;--muted:#6E746C;--surface:#FBFBF8;--line:#D8DBD1;
+    --you:#1F6E68;--partner:#BC6A38;--both:#6E6580;--hk:#97A09A;--na:#C2C6BD;
+    --you-soft:#E2EEEC;--partner-soft:#F4E5D9;
+    --radius:14px;
+    --display:'Space Grotesk',-apple-system,system-ui,sans-serif;
+    --body:'Inter',-apple-system,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;padding:22px 16px 80px}
+  .wrap{max-width:940px;margin:0 auto}
+  .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  h1{font-family:var(--display);font-weight:600;font-size:27px;line-height:1.1;margin:6px 0 2px}
+  .sub{color:var(--muted);max-width:64ch}
+
+  /* phase nav */
+  .phasenav{display:flex;gap:8px;margin:18px 0 18px;flex-wrap:wrap}
+  .phase{flex:1;min-width:150px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 14px;cursor:pointer;transition:.15s}
+  .phase.on{border-color:var(--ink);box-shadow:0 1px 0 var(--ink)}
+  .phase .pn{font-family:var(--display);font-size:12px;color:var(--muted);font-weight:600}
+  .phase .pt{font-weight:600;font-size:15px;margin-top:2px}
+  .phase .pd{font-size:12px;color:var(--muted);margin-top:1px}
+  .phase.on .pn{color:var(--ink)}
+
+  .viewbar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+  .viewseg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+  .viewseg button{font-size:13px;font-weight:550;border:0;background:transparent;color:var(--muted);padding:7px 15px;border-radius:999px;cursor:pointer;transition:.15s}
+  .viewseg button.on{background:var(--ink);color:#fff}
+  .babynote{font-size:12.5px;color:var(--muted);flex:1;min-width:180px}
+  .screen{display:none}
+  .screen.on{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .lead{font-size:14px;color:var(--muted);margin:0 0 14px;max-width:70ch}
+  h2.sec{font-family:var(--display);font-size:18px;font-weight:600;margin:0 0 3px}
+
+  /* ---- phase 1 align ---- */
+  .qhead{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 4px 4px}
+  .qhead div{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+  .qhead .you{color:var(--you)} .qhead .partner{color:var(--partner)}
+  .qblock{margin-bottom:16px}
+  .qtext{font-weight:550;margin-bottom:7px}
+  .qpair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  textarea{width:100%;min-height:62px;resize:vertical;font-family:var(--body);font-size:14px;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff}
+  textarea:focus{outline:0;border-color:var(--muted)}
+  textarea.you{border-left:3px solid var(--you)} textarea.partner{border-left:3px solid var(--partner)}
+  .alignnote{background:var(--you-soft);border-radius:10px;padding:11px 13px;font-size:13.5px;margin-bottom:6px}
+
+  /* ---- phase 2 score (balance signature reused) ---- */
+  .scale{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:24px 22px 18px;margin-bottom:14px;overflow:hidden}
+  .beamwrap{position:relative;height:116px;margin:2px auto;max-width:560px}
+  .beam{position:absolute;left:50%;top:34px;width:440px;height:8px;margin-left:-220px;background:linear-gradient(90deg,var(--you),var(--partner));border-radius:6px;transform-origin:50% 50%;transition:transform .5s cubic-bezier(.34,1.2,.5,1)}
+  .fulcrum{position:absolute;left:50%;top:38px;margin-left:-13px;width:0;height:0;border-left:13px solid transparent;border-right:13px solid transparent;border-top:30px solid var(--ink)}
+  .post{position:absolute;left:50%;top:38px;margin-left:-1.5px;width:3px;height:6px;background:var(--ink)}
+  .pan{position:absolute;top:0;width:150px;text-align:center;transition:transform .5s cubic-bezier(.34,1.2,.5,1)}
+  .pan.l{left:50%;margin-left:-228px}.pan.r{left:50%;margin-left:78px}
+  .pan .who{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+  .pan.l .who{color:var(--you)}.pan.r .who{color:var(--partner)}
+  .pan .big{font-family:var(--display);font-size:32px;font-weight:600;line-height:1}
+  .pan .pts{font-size:12px;color:var(--muted)}
+  .verdict{text-align:center;font-size:14px;margin-top:4px;min-height:20px}
+  .verdict b{font-family:var(--display)}
+  .legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:12px;font-size:12.5px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+  .cat{margin-bottom:18px}
+  .cathead{display:flex;align-items:baseline;justify-content:space-between;margin:0 4px 7px}
+  .cathead h3{font-family:var(--display);font-size:16px;font-weight:600;margin:0}
+  .cathead .ctot{font-size:12.5px;color:var(--muted)}
+  .rows{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .row{display:grid;grid-template-columns:1fr auto;gap:10px;padding:11px 13px;border-bottom:1px solid var(--line);align-items:center}
+  .row:last-child{border-bottom:0}
+  .rname input.namein{font-family:var(--body);font-weight:550;font-size:14.5px;border:0;background:transparent;color:var(--ink);width:100%;padding:2px 0;border-bottom:1px dashed transparent}
+  .rname input.namein:focus{outline:0;border-bottom-color:var(--line)}
+  .meta{display:flex;flex-wrap:wrap;gap:7px 11px;margin-top:5px;font-size:12px;color:var(--muted);align-items:center}
+  .meta .fld{display:inline-flex;align-items:center;gap:4px}
+  .meta input.num{width:46px;font-family:var(--display);font-size:12.5px;text-align:center;border:1px solid var(--line);border-radius:6px;padding:3px;background:#fff;color:var(--ink)}
+  .meta select{font-size:12px;border:1px solid var(--line);border-radius:6px;padding:3px 5px;background:#fff;color:var(--ink)}
+  .load{font-family:var(--display);font-weight:600;font-size:12.5px;color:var(--ink);background:var(--bg);border-radius:6px;padding:3px 7px;white-space:nowrap}
+  .rside{display:flex;flex-direction:column;align-items:flex-end;gap:7px}
+  .assign{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff}
+  .assign button{font-size:11.5px;font-weight:550;border:0;background:transparent;color:var(--muted);padding:6px 8px;cursor:pointer;border-left:1px solid var(--line)}
+  .assign button:first-child{border-left:0}
+  .assign button[data-k=me].on{background:var(--you);color:#fff}
+  .assign button[data-k=partner].on{background:var(--partner);color:#fff}
+  .assign button[data-k=both].on{background:var(--both);color:#fff}
+  .assign button[data-k=hk].on{background:var(--hk);color:#fff}
+  .assign button[data-k=na].on{background:var(--na);color:#2a2f29}
+  .del{border:0;background:transparent;color:var(--na);cursor:pointer;font-size:14px;padding:2px 4px}
+  .del:hover{color:var(--partner)}
+  .addrow{width:100%;text-align:left;border:0;background:transparent;color:var(--muted);font-size:13px;padding:10px 13px;cursor:pointer}
+  .addrow:hover{color:var(--ink)}
+  details.method{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:16px}
+  details.method>summary{cursor:pointer;padding:12px 16px;font-weight:600;font-size:14px;list-style:none}
+  details.method>summary::-webkit-details-marker{display:none}
+  details.method>summary::after{content:'＋';float:right;color:var(--muted)}
+  details.method[open]>summary::after{content:'－'}
+  .methodbody{padding:0 16px 16px;font-size:13px;color:var(--muted)}
+  .sliderrow{display:flex;align-items:center;gap:12px;margin:12px 0}
+  .sliderrow label{flex:0 0 160px;color:var(--ink);font-weight:500;font-size:13px}
+  .sliderrow input[type=range]{flex:1;accent-color:var(--ink)}
+  .sliderrow .val{font-family:var(--display);font-weight:600;width:42px;text-align:right}
+
+  /* ---- phase 3 decide ---- */
+  .pressure{background:var(--partner-soft);border-radius:12px;padding:13px 15px;margin-bottom:16px;font-size:13.5px}
+  .pressure b{font-family:var(--display)}
+  .pressure ul{margin:7px 0 0;padding-left:18px}
+  .budget{display:flex;align-items:center;gap:10px;margin:6px 0 18px;flex-wrap:wrap}
+  .budget input{width:90px;font-family:var(--display);font-size:15px;border:1px solid var(--line);border-radius:8px;padding:7px 9px;background:#fff;color:var(--ink)}
+  .opt{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px;background:var(--surface);transition:.15s}
+  .opt.on{border-color:var(--ink)}
+  .opthead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .opthead .ot{font-weight:600}
+  .opthead .otoggle{font-size:12.5px;font-weight:550;border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:5px 13px;cursor:pointer;white-space:nowrap}
+  .opt.on .otoggle{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .procon{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px;font-size:13px}
+  .procon .h{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--muted);margin-bottom:4px}
+  .procon ul{margin:0;padding-left:16px}
+  .pro li{color:var(--ink)} .con li{color:var(--muted)}
+  .plan textarea{min-height:80px}
+
+  .navfoot{display:flex;justify-content:space-between;margin-top:18px;gap:10px}
+  .ghost{font-size:13px;font-weight:550;border:1px solid var(--line);background:var(--surface);color:var(--muted);padding:9px 16px;border-radius:10px;cursor:pointer}
+  .ghost:hover{color:var(--ink);border-color:var(--muted)}
+  .solid{font-size:13px;font-weight:550;border:1px solid var(--ink);background:var(--ink);color:#fff;padding:9px 18px;border-radius:10px;cursor:pointer}
+
+  .mockbadge{display:inline-block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--muted);border:1px dashed var(--line);border-radius:999px;padding:3px 10px;margin-left:8px;vertical-align:middle}
+
+  @media (max-width:680px){
+    .beamwrap{transform:scale(.84);transform-origin:top center;height:100px}
+    .qpair,.procon,.qhead{grid-template-columns:1fr}
+    .qhead{display:none}
+    .row{grid-template-columns:1fr}.rside{align-items:flex-start}
+    h1{font-size:23px}
+  }
+  @media (prefers-reduced-motion:reduce){.beam,.pan,.screen.on{transition:none;animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Household conversation tool</div>
+  <h1>Align · Score · Decide <span class="mockbadge">mockup</span></h1>
+  <p class="sub">Three phases, in order. Talk about what matters before you touch the schedule — then score the real load, then choose how to split it. Everything here is editable and saves as you go.</p>
+
+  <div class="phasenav" id="phasenav">
+    <button class="phase on" data-s="align"><div class="pn">Phase 1</div><div class="pt">Align</div><div class="pd">What's important to each of us</div></button>
+    <button class="phase" data-s="score"><div class="pn">Phase 2</div><div class="pt">Score the load</div><div class="pd">What the work actually weighs</div></button>
+    <button class="phase" data-s="decide"><div class="pn">Phase 3</div><div class="pt">Decide</div><div class="pd">How we split & what we pay to offload</div></button>
+  </div>
+
+  <!-- ===================== PHASE 1: ALIGN ===================== -->
+  <section class="screen on" id="screen-align">
+    <div class="card">
+      <h2 class="sec">Align first</h2>
+      <p class="lead">Answer these separately, then read each other's. Most household friction isn't about who does the dishes — it's that "clean enough" and "what bugs me" are different for each of you, and never got said out loud. The goal here isn't agreement yet. It's an honest map of where you already agree and where you don't.</p>
+      <div class="alignnote">Tip: fill your own column without looking at the other. Compare after. Mismatches aren't problems — they're the conversation.</div>
+      <div class="qhead"><div class="you">You</div><div class="partner">Partner</div></div>
+      <div id="alignq"></div>
+    </div>
+    <div class="navfoot"><span></span><button class="solid" data-go="score">Next: score the load →</button></div>
+  </section>
+
+  <!-- ===================== PHASE 2: SCORE ===================== -->
+  <section class="screen" id="screen-score">
+    <div class="viewbar">
+      <div class="viewseg" id="viewseg">
+        <button data-v="current" class="on">Right now</button>
+        <button data-v="baby">With baby (≈6 mo)</button>
+      </div>
+      <div class="babynote" id="babynote"></div>
+    </div>
+    <div class="scale">
+      <div class="beamwrap">
+        <div class="pan l" id="panL"><div class="who">You</div><div class="big" id="pctL">50%</div><div class="pts" id="ptsL">0 pts · 0 h/mo</div></div>
+        <div class="pan r" id="panR"><div class="who">Partner</div><div class="big" id="pctR">50%</div><div class="pts" id="ptsR">0 pts · 0 h/mo</div></div>
+        <div class="beam" id="beam"></div><div class="post"></div><div class="fulcrum"></div>
+      </div>
+      <div class="verdict" id="verdict"></div>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--you)"></i>You</span>
+        <span><i class="dot" style="background:var(--partner)"></i>Partner</span>
+        <span><i class="dot" style="background:var(--both)"></i>Both (50/50)</span>
+        <span><i class="dot" style="background:var(--hk)"></i>Outsource</span>
+        <span><i class="dot" style="background:var(--na)"></i>N/A</span>
+      </div>
+    </div>
+
+    <details class="method">
+      <summary>How the score works (tune the weights)</summary>
+      <div class="methodbody">
+        <p style="margin-top:10px">Raw time undercounts the work nobody sees. Two dials weight that in. <b>Mental</b> (0–3) = ongoing noticing/planning/remembering, separate from doing. <b>Ick</b> (0–2) = the "nobody wants this" factor.</p>
+        <div class="sliderrow"><label>Mental-load weight</label><input type="range" id="wMental" min="0" max="2" step="0.25" value="1"><span class="val" id="wMentalV">1×</span></div>
+        <div class="sliderrow"><label>Ick weight</label><input type="range" id="wUnpl" min="0" max="1.5" step="0.25" value="0.5"><span class="val" id="wUnplV">0.5×</span></div>
+      </div>
+    </details>
+
+    <div id="cats"></div>
+    <div class="navfoot"><button class="ghost" data-go="align">← Back to align</button><button class="solid" data-go="decide">Next: decide how to split →</button></div>
+  </section>
+
+  <!-- ===================== PHASE 3: DECIDE ===================== -->
+  <section class="screen" id="screen-decide">
+    <div class="card">
+      <h2 class="sec">Decide</h2>
+      <p class="lead">Now that you can see the load and where it's tilted, choose how to handle it. These options aren't mutually exclusive — most households run a mix (schedule the shared stuff, outsource the worst stuff, heuristics for the rest). Where Phase 1 showed you're not aligned, settle that before picking a tactic for that area.</p>
+
+      <div class="pressure" id="pressure"></div>
+
+      <div class="budget">
+        <label style="font-weight:550">Monthly budget to offload work: $</label>
+        <input type="number" id="budget" min="0" placeholder="0">
+        <span style="font-size:12.5px;color:var(--muted)">— what you'll spend on housekeeper, laundry service, etc.</span>
+      </div>
+
+      <div id="options"></div>
+
+      <h2 class="sec" style="margin-top:18px">Our plan</h2>
+      <p class="lead" style="margin-bottom:8px">Write the agreement in plain words. Include the part your notes nailed: what happens when one of you is sick or slammed, and what the other gives in return.</p>
+      <div class="plan"><textarea id="planText" placeholder="e.g. Yolanda every other week ($x). Dishes by Resistor heuristic. Laundromat runs alternate weeks. Supplies: one person owns the reorder list. When someone's sick, the other covers their tasks that week, no scorekeeping…"></textarea></div>
+    </div>
+    <div class="navfoot"><button class="ghost" data-go="score">← Back to score</button><button class="ghost" id="resetBtn">Reset everything</button></div>
+  </section>
+</div>
+
+<script>
+/* ---------- content (Hal & partner's brainstorm) ---------- */
+const ALIGN_Q = [
+  "What's important to you about how the house runs?",
+  "What does \u201cgood\u201d look like to you? (be concrete)",
+  "What do you hate doing, or not want to do often?",
+  "What's your monthly budget for solving these with money?",
+  "When you're sick / tired / can't hold up your end \u2014 what do you want to happen?",
+  "When your partner can't hold up their end \u2014 what are you willing to give?"
+];
+
+// baby:'amplify' = existing task that scales by babyMult in the With-baby view
+// baby:'only'    = appears only in the With-baby view
+const DEFAULTS = [
+ // Food & cooking
+ {c:'Food & cooking', n:'Meal planning for the week', t:20, f:4, m:3, u:0},
+ {c:'Food & cooking', n:'Grocery list / ordering', t:15, f:4, m:2, u:0},
+ {c:'Food & cooking', n:'Grocery shopping + unpacking', t:45, f:4, m:1, u:0},
+ {c:'Food & cooking', n:'Weeknight cooking', t:35, f:20, m:1, u:0},
+ {c:'Food & cooking', n:'Bigger weekend / batch cooking', t:75, f:4, m:1, u:0},
+ {c:'Food & cooking', n:'Pack lunches / portion leftovers', t:10, f:12, m:1, u:0},
+ {c:'Food & cooking', n:'Manage fridge / toss old food', t:10, f:4, m:1, u:1},
+ // Kitchen cleanup
+ {c:'Kitchen cleanup', n:'Dishes (load/unload dishwasher)', t:12, f:30, m:0, u:1, baby:'amplify', babyMult:1.6},
+ {c:'Kitchen cleanup', n:'Hand-wash pots & pans', t:10, f:20, m:0, u:1},
+ {c:'Kitchen cleanup', n:'Wipe counters', t:6, f:20, m:0, u:0},
+ {c:'Kitchen cleanup', n:'Wipe stove / oven', t:10, f:8, m:0, u:1},
+ {c:'Kitchen cleanup', n:'Wipe butcher block', t:6, f:12, m:1, u:0},
+ {c:'Kitchen cleanup', n:'Kitchen trash out', t:5, f:12, m:0, u:1},
+ {c:'Kitchen cleanup', n:'Sweep & quick mop kitchen', t:12, f:12, m:0, u:0},
+ // Cleaning & bathroom (one bathroom; robot vacuum)
+ {c:'Cleaning & bathroom', n:'Daily tidy — put stuff away', t:15, f:30, m:2, u:0, baby:'amplify', babyMult:1.5},
+ {c:'Cleaning & bathroom', n:'Run / empty / refill robot vacuum', t:5, f:12, m:1, u:0},
+ {c:'Cleaning & bathroom', n:'Deep clean robot vacuum (brushes/filter)', t:20, f:2, m:1, u:1},
+ {c:'Cleaning & bathroom', n:'Vacuum / sweep (edges & spots)', t:20, f:4, m:0, u:0},
+ {c:'Cleaning & bathroom', n:'Mop floors (full)', t:25, f:2, m:0, u:1},
+ {c:'Cleaning & bathroom', n:'Clean the bathroom (toilet, sink, shower)', t:30, f:4, m:0, u:2},
+ {c:'Cleaning & bathroom', n:'Dusting', t:20, f:2, m:0, u:0},
+ {c:'Cleaning & bathroom', n:'Trash & recycling out + sort', t:10, f:8, m:1, u:1},
+ // Laundry (laundromat)
+ {c:'Laundry', n:'Sort & pack laundry', t:8, f:8, m:1, u:0, baby:'amplify', babyMult:2.0},
+ {c:'Laundry', n:'Take to laundromat', t:20, f:8, m:1, u:1, baby:'amplify', babyMult:1.8},
+ {c:'Laundry', n:'Pick up from laundromat', t:20, f:8, m:1, u:0, baby:'amplify', babyMult:1.8},
+ {c:'Laundry', n:'Fold & put away', t:25, f:8, m:0, u:0, baby:'amplify', babyMult:2.0},
+ {c:'Laundry', n:'Change bed linens', t:15, f:4, m:0, u:0},
+ {c:'Laundry', n:'Towels & kitchen cloths', t:10, f:4, m:0, u:0},
+ // Cats (2 cats + Litter-Robot)
+ {c:'Cats', n:'Feed cats (AM/PM)', t:5, f:60, m:0, u:0},
+ {c:'Cats', n:'Fresh water', t:3, f:30, m:0, u:0},
+ {c:'Cats', n:'Empty Litter-Robot waste drawer', t:5, f:12, m:1, u:2},
+ {c:'Cats', n:'Refill litter', t:5, f:4, m:1, u:1},
+ {c:'Cats', n:'Deep clean Litter-Robot', t:30, f:1, m:1, u:2},
+ {c:'Cats', n:'Sweep stray litter / clean around box', t:5, f:12, m:0, u:1},
+ {c:'Cats', n:'Brush / play / attention', t:15, f:20, m:1, u:0},
+ {c:'Cats', n:'Clean up hairballs / vomit / accidents', t:10, f:6, m:0, u:2},
+ {c:'Cats', n:'Vet appts + meds / flea tracking', t:40, f:1, m:3, u:0},
+ {c:'Cats', n:'Track & reorder cat food + litter', t:10, f:4, m:3, u:0},
+ // Plants & home
+ {c:'Plants & home', n:'Water & tend the 3 plants', t:8, f:8, m:1, u:0},
+ {c:'Plants & home', n:'Repot / prune / fertilize plants', t:25, f:1, m:1, u:0},
+ {c:'Plants & home', n:'Small home repairs / handyman tasks', t:30, f:2, m:2, u:1},
+ {c:'Plants & home', n:'Bulbs / batteries / filters', t:10, f:2, m:2, u:0},
+ // Admin & mental load
+ {c:'Admin & mental load', n:'Pay bills / manage finances', t:30, f:4, m:3, u:0},
+ {c:'Admin & mental load', n:'Schedule appointments / repairs', t:20, f:4, m:3, u:0},
+ {c:'Admin & mental load', n:'Book + prep for housekeeper', t:25, f:1, m:2, u:0},
+ {c:'Admin & mental load', n:'Mail / packages / returns', t:15, f:8, m:1, u:0},
+ {c:'Admin & mental load', n:'Notice & reorder supplies (TP, towels, soap, pods, toothpaste, floss)', t:12, f:8, m:3, u:0},
+ {c:'Admin & mental load', n:'Home maintenance tracking (detectors, filters)', t:20, f:1, m:2, u:0},
+ {c:'Admin & mental load', n:'Run the shared calendar / who-does-what', t:15, f:8, m:3, u:0},
+ // Baby (With-baby view only — rough newborn estimates, tune them)
+ {c:'Baby', n:'Night feeds / wakeups', t:40, f:60, m:2, u:1, baby:'only'},
+ {c:'Baby', n:'Diaper changes', t:6, f:240, m:0, u:2, baby:'only'},
+ {c:'Baby', n:'Soothe / settle (non-feed)', t:25, f:30, m:1, u:1, baby:'only'},
+ {c:'Baby', n:'Daytime care blocks', t:120, f:30, m:2, u:0, baby:'only'},
+ {c:'Baby', n:'Bottle wash / sterilize', t:15, f:60, m:0, u:1, baby:'only'},
+ {c:'Baby', n:'Bath + general care', t:20, f:20, m:1, u:0, baby:'only'},
+ {c:'Baby', n:'Baby laundry + changes of clothes', t:15, f:20, m:0, u:1, baby:'only'},
+ {c:'Baby', n:'Pediatrician appts + tracking', t:60, f:2, m:3, u:0, baby:'only'},
+ {c:'Baby', n:'Track + order baby supplies (diapers/formula/wipes)', t:20, f:6, m:3, u:0, baby:'only'},
+ {c:'Baby', n:'Childcare / daycare research & logistics', t:45, f:2, m:3, u:0, baby:'only'},
+];
+const CAT_ORDER = ['Food & cooking','Kitchen cleanup','Cleaning & bathroom','Laundry','Cats','Plants & home','Admin & mental load','Baby'];
+
+const OPTIONS = [
+  {id:'o1', t:'Have the housekeeper come every other week',
+   pro:['No extra work for us \u2014 nothing to change'],
+   con:['More expensive','We don\u2019t get more self-sufficient','Doesn\u2019t touch cooking, groceries, repairs']},
+  {id:'o2', t:'Each clean only our own mess',
+   pro:['Nobody cleans up after anyone else'],
+   con:['Breaks down for shared tasks (tub, vacuuming)','Doesn\u2019t touch cooking, groceries, repairs']},
+  {id:'o3', t:'Use heuristics (e.g. the Resistor dish rule)',
+   pro:['Easy to remember','Everyone just handles themselves'],
+   con:['We don\u2019t always agree on the heuristic','No heuristic for everything','A bit transactional; weak for shared spaces']},
+  {id:'o4', t:'Make a chore schedule',
+   pro:['Work gets done routinely','Unambiguous whose job is what','Genuinely shared labor'],
+   con:['Falls apart if not adhered to','Can be too rigid','Some tasks are much bigger than others']},
+];
+
+/* ---------- state ---------- */
+let state=null; const KEY='household-asd-mock-v2';
+function fresh(){
+  return {
+    screen:'align', view:'current', wMental:1, wUnpl:0.5, budget:'', planText:'',
+    align: ALIGN_Q.map(()=>({you:'',partner:''})),
+    options: {}, // id -> bool
+    chores: DEFAULTS.map((d,i)=>({id:'c'+i,...d, a: d.baby==='only' ? 'both' : 'na'}))
+  };
+}
+async function load(){ try{const r=await window.storage.get(KEY); if(r&&r.value) state=JSON.parse(r.value);}catch(e){} if(!state) state=fresh(); if(!state.chores||!state.chores.length) state=fresh(); }
+async function save(){ try{await window.storage.set(KEY, JSON.stringify(state));}catch(e){} }
+
+/* ---------- scoring ---------- */
+function loadPts(ch){
+  let mult=1;
+  if(state.view==='baby' && ch.baby==='amplify' && ch.babyMult) mult=ch.babyMult;
+  const min=ch.t*ch.f*mult;
+  const w=(1+state.wMental*(ch.m/3))*(1+state.wUnpl*(ch.u/2));
+  return {pts:min*w/10, mins:min};
+}
+function visible(ch){ return state.view==='baby' ? true : ch.baby!=='only'; }
+const $=s=>document.querySelector(s);
+
+/* ---------- screen switching ---------- */
+function setScreen(s){
+  state.screen=s; save();
+  document.querySelectorAll('.phase').forEach(p=>p.classList.toggle('on',p.dataset.s===s));
+  document.querySelectorAll('.screen').forEach(sc=>sc.classList.toggle('on',sc.id==='screen-'+s));
+  if(s==='score') renderScore();
+  if(s==='decide') renderDecide();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ---------- phase 1 ---------- */
+function renderAlign(){
+  const box=$('#alignq'); box.innerHTML='';
+  ALIGN_Q.forEach((q,i)=>{
+    const b=document.createElement('div'); b.className='qblock';
+    b.innerHTML='<div class="qtext">'+(i+1)+'. '+q+'</div>';
+    const pair=document.createElement('div'); pair.className='qpair';
+    const ty=document.createElement('textarea'); ty.className='you'; ty.placeholder='You\u2026'; ty.value=state.align[i].you;
+    ty.oninput=()=>{state.align[i].you=ty.value; save();};
+    const tp=document.createElement('textarea'); tp.className='partner'; tp.placeholder='Partner\u2026'; tp.value=state.align[i].partner;
+    tp.oninput=()=>{state.align[i].partner=tp.value; save();};
+    pair.appendChild(ty); pair.appendChild(tp); b.appendChild(pair); box.appendChild(b);
+  });
+}
+
+/* ---------- phase 2 ---------- */
+function renderScore(){
+  // view toggle
+  document.querySelectorAll('#viewseg button').forEach(b=>b.classList.toggle('on', b.dataset.v===state.view));
+  $('#babynote').textContent = state.view==='baby'
+    ? 'Newborn tasks added; laundry, dishes and tidying scaled up. Estimates — tune them to your reality.'
+    : '';
+  $('#wMental').value=state.wMental; $('#wMentalV').textContent=(+state.wMental)+'\u00d7';
+  $('#wUnpl').value=state.wUnpl; $('#wUnplV').textContent=(+state.wUnpl)+'\u00d7';
+  let you=0,partner=0,both=0, youMin=0,partnerMin=0,bothMin=0;
+  state.chores.forEach(ch=>{if(!visible(ch))return; const L=loadPts(ch);
+    if(ch.a==='me'){you+=L.pts;youMin+=L.mins;}
+    else if(ch.a==='partner'){partner+=L.pts;partnerMin+=L.mins;}
+    else if(ch.a==='both'){both+=L.pts;bothMin+=L.mins;}});
+  const yT=you+both/2, pT=partner+both/2, human=yT+pT;
+  const yP=human>0?yT/human:.5, pP=human>0?pT/human:.5;
+  $('#pctL').textContent=Math.round(yP*100)+'%'; $('#pctR').textContent=Math.round(pP*100)+'%';
+  $('#ptsL').textContent=Math.round(yT)+' pts · '+((youMin+bothMin/2)/60).toFixed(1)+' h/mo';
+  $('#ptsR').textContent=Math.round(pT)+' pts · '+((partnerMin+bothMin/2)/60).toFixed(1)+' h/mo';
+  const deg=Math.max(-9,Math.min(9,(yP-.5)*26));
+  $('#beam').style.transform='rotate('+deg+'deg)';
+  $('#panL').style.transform='translateY('+deg*1.3+'px)'; $('#panR').style.transform='translateY('+(-deg*1.3)+'px)';
+  const v=$('#verdict');
+  if(human===0) v.innerHTML='Nothing assigned yet \u2014 tag tasks below.';
+  else{const gap=Math.abs(yP-pP)*100; const heavier=yT>pT?'you':'your partner';
+    v.innerHTML=gap<6?'<b>Balanced.</b> Within a few points of even.':'<b>'+Math.round(gap)+' points apart</b> \u2014 tilted toward '+heavier+'.';}
+  // rows
+  const root=$('#cats'); root.innerHTML='';
+  CAT_ORDER.forEach(cat=>{
+    if(cat==='Baby' && state.view!=='baby') return;
+    const items=state.chores.filter(c=>c.c===cat && visible(c));
+    const ctot=items.reduce((s,c)=>s+(['me','partner','both'].includes(c.a)?loadPts(c).pts:0),0);
+    const sec=document.createElement('div'); sec.className='cat';
+    const head=document.createElement('div'); head.className='cathead';
+    head.innerHTML='<h3>'+cat+'</h3><span class="ctot">'+Math.round(ctot)+' pts assigned</span>';
+    sec.appendChild(head);
+    const rows=document.createElement('div'); rows.className='rows';
+    items.forEach(ch=>rows.appendChild(rowEl(ch)));
+    const add=document.createElement('button'); add.className='addrow'; add.textContent='+ add a task';
+    add.onclick=()=>{state.chores.push({id:'u'+Date.now(),c:cat,n:'New task',t:10,f:4,m:0,u:0,a:'na', baby: cat==='Baby'?'only':null}); save(); renderScore();};
+    rows.appendChild(add); sec.appendChild(rows); root.appendChild(sec);
+  });
+}
+function rowEl(ch){
+  const L=loadPts(ch);
+  const row=document.createElement('div'); row.className='row';
+  const main=document.createElement('div');
+  const name=document.createElement('div'); name.className='rname';
+  const nin=document.createElement('input'); nin.className='namein'; nin.value=ch.n; nin.oninput=()=>{ch.n=nin.value;save();};
+  name.appendChild(nin); main.appendChild(name);
+  const meta=document.createElement('div'); meta.className='meta';
+  meta.appendChild(numF('min',ch.t,v=>ch.t=v)); meta.appendChild(numF('\u00d7/mo',ch.f,v=>ch.f=v));
+  meta.appendChild(selF('mental',ch.m,3,v=>ch.m=v)); meta.appendChild(selF('ick',ch.u,2,v=>ch.u=v));
+  const load=document.createElement('span'); load.className='load'; load.textContent=Math.round(L.pts)+' pts'; meta.appendChild(load);
+  main.appendChild(meta); row.appendChild(main);
+  const side=document.createElement('div'); side.className='rside';
+  const as=document.createElement('div'); as.className='assign';
+  [['me','You'],['partner','Ptnr'],['both','Both'],['hk','Out'],['na','N/A']].forEach(([k,l])=>{
+    const b=document.createElement('button'); b.dataset.k=k; b.textContent=l; if(ch.a===k)b.classList.add('on');
+    b.onclick=()=>{ch.a=k;save();renderScore();}; as.appendChild(b);});
+  side.appendChild(as);
+  const del=document.createElement('button'); del.className='del'; del.textContent='\u2715';
+  del.onclick=()=>{state.chores=state.chores.filter(x=>x!==ch);save();renderScore();};
+  side.appendChild(del); row.appendChild(side); return row;
+}
+function numF(lab,val,set){const w=document.createElement('span');w.className='fld';
+  const i=document.createElement('input');i.className='num';i.type='number';i.min='0';i.value=val;
+  i.oninput=()=>{set(parseFloat(i.value)||0);save();clearTimeout(window._rt);window._rt=setTimeout(renderScore,350);};
+  const l=document.createElement('span');l.textContent=lab;w.appendChild(i);w.appendChild(l);return w;}
+function selF(lab,val,max,set){const w=document.createElement('span');w.className='fld';
+  const s=document.createElement('select');for(let i=0;i<=max;i++){const o=document.createElement('option');o.value=i;o.textContent=i;if(i===val)o.selected=true;s.appendChild(o);}
+  s.onchange=()=>{set(parseInt(s.value));save();renderScore();};
+  const l=document.createElement('span');l.textContent=lab;w.appendChild(l);w.appendChild(s);return w;}
+
+/* ---------- phase 3 ---------- */
+function renderDecide(){
+  // pressure points: heaviest + ickiest currently on a person
+  const onPeople=state.chores.filter(c=>visible(c) && ['me','partner','both'].includes(c.a));
+  const heavy=[...onPeople].sort((a,b)=>loadPts(b).pts-loadPts(a).pts).slice(0,3).map(c=>c.n);
+  const icky=onPeople.filter(c=>c.u>=2).map(c=>c.n);
+  const p=$('#pressure');
+  if(!onPeople.length){p.innerHTML='<b>Offload candidates</b> appear here once you\u2019ve assigned tasks in Phase 2.';}
+  else{
+    let h='<b>Where to point your money & schedule.</b>';
+    if(heavy.length) h+='<div style="margin-top:6px">Heaviest load right now: '+heavy.join(', ')+'.</div>';
+    if(icky.length) h+='<div style="margin-top:4px">Worst to do (good outsource candidates): '+[...new Set(icky)].join(', ')+'.</div>';
+    p.innerHTML=h;
+  }
+  $('#budget').value=state.budget; $('#planText').value=state.planText;
+  const root=$('#options'); root.innerHTML='';
+  OPTIONS.forEach(o=>{
+    const on=!!state.options[o.id];
+    const el=document.createElement('div'); el.className='opt'+(on?' on':'');
+    const head=document.createElement('div'); head.className='opthead';
+    head.innerHTML='<div class="ot">'+o.t+'</div>';
+    const tg=document.createElement('button'); tg.className='otoggle'; tg.textContent=on?'Considering \u2713':'Consider';
+    tg.onclick=()=>{state.options[o.id]=!on;save();renderDecide();};
+    head.appendChild(tg); el.appendChild(head);
+    const pc=document.createElement('div'); pc.className='procon';
+    pc.innerHTML='<div class="pro"><div class="h">Pros</div><ul>'+o.pro.map(x=>'<li>'+x+'</li>').join('')+'</ul></div>'+
+                 '<div class="con"><div class="h">Cons</div><ul>'+o.con.map(x=>'<li>'+x+'</li>').join('')+'</ul></div>';
+    el.appendChild(pc); root.appendChild(el);
+  });
+}
+
+/* ---------- events ---------- */
+document.querySelectorAll('.phase').forEach(p=>p.onclick=()=>setScreen(p.dataset.s));
+document.querySelectorAll('#viewseg button').forEach(b=>b.onclick=()=>{state.view=b.dataset.v;save();renderScore();});
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>setScreen(b.dataset.go));
+$('#wMental').oninput=e=>{state.wMental=parseFloat(e.target.value);save();renderScore();};
+$('#wUnpl').oninput=e=>{state.wUnpl=parseFloat(e.target.value);save();renderScore();};
+$('#budget').oninput=e=>{state.budget=e.target.value;save();};
+$('#planText').oninput=e=>{state.planText=e.target.value;save();};
+$('#resetBtn').onclick=async()=>{if(!confirm('Reset everything to defaults?'))return;state=fresh();await save();renderAlign();setScreen('align');};
+
+/* ---------- boot ---------- */
+(async function(){await load();renderAlign();setScreen(state.screen||'align');})();
+</script>
+</body>
+</html>
