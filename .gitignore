@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env.local
+.env
+
+# Python
+api/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Editor
+.DS_Store
+.vscode/
+*.swp
