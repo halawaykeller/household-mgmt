@@ -1,5 +1,5 @@
--- Run this once against your Postgres database (local or Vercel).
--- psql $POSTGRES_URL < schema.sql
+-- Initial schema: one table holds the full session state as a JSON blob.
+-- Adding columns here in future migrations is the only way to change the schema.
 
 CREATE TABLE IF NOT EXISTS sessions (
   id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
