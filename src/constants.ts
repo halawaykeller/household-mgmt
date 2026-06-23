@@ -1,7 +1,7 @@
 // Seed data verbatim from household-app-mockup.html — these are the real tasks,
 // questions, and solution options for the Align · Score · Decide flow.
 
-import type { Task } from './types';
+import type { Task, PersonData, AppState } from './types';
 
 export const CATEGORY_ORDER = [
   'Food & cooking',
@@ -136,16 +136,52 @@ export const DEFAULT_TASKS: Omit<Task, 'id'>[] = [
   { category: 'Admin & mental load', name: 'Run the shared calendar / who-does-what', minutesPerOccurrence: 15, occurrencesPerMonth: 8, mental: 3, ick: 0, assignment: 'na' },
 ];
 
-export function makeFreshState(): import('./types').AppState {
+export function makePersonData(name = ''): PersonData {
+  return {
+    name,
+    alignAnswers: ALIGN_QUESTIONS.map(() => ''),
+    tasks: DEFAULT_TASKS.map((t, i) => ({ id: `t${i}`, ...t })),
+    weights: { mental: 1.0, ick: 0.5 },
+  };
+}
+
+export function makeFreshState(): AppState {
   return {
     screen: 'align',
-    weights: { mental: 1.0, ick: 0.5 },
-    align: ALIGN_QUESTIONS.map(() => ({ you: '', partner: '' })),
-    tasks: DEFAULT_TASKS.map((t, i) => ({ id: `t${i}`, ...t })),
+    a: makePersonData(),
+    b: makePersonData(),
     options: Object.fromEntries(SOLUTION_OPTIONS.map(o => [o.id, false])),
     customSolutions: [],
     comments: {},
     budgetMonthly: '',
     plan: '',
+  };
+}
+
+// Migrate sessions saved before the per-person data model existed.
+// Old shape had top-level `align`, `tasks`, `weights`; new shape has `a` and `b`.
+export function migrateState(raw: Record<string, unknown>): AppState {
+  if (raw.a && typeof raw.a === 'object') return raw as unknown as AppState;
+
+  const fresh = makeFreshState();
+  const oldAlign = (raw.align as { you: string; partner: string }[] | undefined) ?? [];
+  return {
+    ...fresh,
+    screen: (raw.screen as AppState['screen']) ?? 'align',
+    a: {
+      ...fresh.a,
+      alignAnswers: oldAlign.map(q => q.you ?? ''),
+      tasks: (raw.tasks as Task[] | undefined) ?? fresh.a.tasks,
+      weights: (raw.weights as PersonData['weights'] | undefined) ?? fresh.a.weights,
+    },
+    b: {
+      ...fresh.b,
+      alignAnswers: oldAlign.map(q => q.partner ?? ''),
+    },
+    options: (raw.options as Record<string, boolean> | undefined) ?? fresh.options,
+    customSolutions: (raw.customSolutions as AppState['customSolutions'] | undefined) ?? [],
+    comments: (raw.comments as Record<string, string[]> | undefined) ?? {},
+    budgetMonthly: (raw.budgetMonthly as string | undefined) ?? '',
+    plan: (raw.plan as string | undefined) ?? '',
   };
 }

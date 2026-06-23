@@ -8,6 +8,7 @@ interface Props {
   weights: AppState['weights'];
   onUpdate: (updated: Task) => void;
   onDelete: () => void;
+  readOnly?: boolean;
 }
 
 const ASSIGNMENTS: { key: Assignment; label: string }[] = [
@@ -18,7 +19,7 @@ const ASSIGNMENTS: { key: Assignment; label: string }[] = [
   { key: 'na',       label: 'N/A'  },
 ];
 
-export default function TaskRow({ task, weights, onUpdate, onDelete }: Props) {
+export default function TaskRow({ task, weights, onUpdate, onDelete, readOnly = false }: Props) {
   const scoreTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { loadPoints } = scoreTask(task, weights);
 
@@ -34,12 +35,13 @@ export default function TaskRow({ task, weights, onUpdate, onDelete }: Props) {
   }
 
   return (
-    <div className="row">
+    <div className={`row${readOnly ? ' row-readonly' : ''}`}>
       <div>
         <div className="rname">
           <input
             defaultValue={task.name}
-            onBlur={e => update({ name: e.target.value })}
+            onBlur={e => !readOnly && update({ name: e.target.value })}
+            readOnly={readOnly}
             aria-label="Task name"
           />
         </div>

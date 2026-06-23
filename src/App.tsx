@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import type { AppState } from './types';
-import { makeFreshState } from './constants';
+import type { AppState, Seat } from './types';
+import { makeFreshState, migrateState } from './constants';
 import { createSession, fetchSession, saveSession } from './api';
+import IdentityGate from './components/IdentityGate';
 import PhaseNav from './components/PhaseNav';
 import Align from './components/Align';
 import Score from './components/Score';
 import Decide from './components/Decide';
 
 const SESSION_KEY = 'household-session-id';
+// Maps sessionId → seat ('a' | 'b') so each device remembers who it is.
+const SEAT_KEY = (id: string) => `household-seat-${id}`;
 
 type LoadStatus = 'loading' | 'ready' | 'error';
 
@@ -24,11 +27,11 @@ function setSessionIdInUrl(id: string) {
 export default function App() {
   const [status, setStatus] = useState<LoadStatus>('loading');
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [seat, setSeat] = useState<Seat | null>(null);
   const [state, setStateRaw] = useState<AppState>(makeFreshState());
   const [copied, setCopied] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load or create session on mount
   useEffect(() => {
     async function init() {
       try {
@@ -38,20 +41,23 @@ export default function App() {
 
         let session;
         if (id) {
-          try {
-            session = await fetchSession(id);
-          } catch {
-            // Session not found (deleted or wrong id) — start fresh
-            session = await createSession(makeFreshState());
-          }
+          try { session = await fetchSession(id); }
+          catch { session = await createSession(makeFreshState()); }
         } else {
           session = await createSession(makeFreshState());
         }
 
+        const migratedState = migrateState(session.state as Record<string, unknown>);
+
         localStorage.setItem(SESSION_KEY, session.id);
         setSessionIdInUrl(session.id);
         setSessionId(session.id);
-        setStateRaw(session.state);
+        setStateRaw(migratedState);
+
+        // Restore seat from localStorage if this device has been here before
+        const savedSeat = localStorage.getItem(SEAT_KEY(session.id)) as Seat | null;
+        if (savedSeat) setSeat(savedSeat);
+
         setStatus('ready');
       } catch (e) {
         console.error('Failed to initialize session', e);
@@ -61,7 +67,6 @@ export default function App() {
     void init();
   }, []);
 
-  // Debounced autosave: 500ms after the last state change
   const setState = useCallback(
     (updater: AppState | ((prev: AppState) => AppState)) => {
       setStateRaw(prev => {
@@ -76,6 +81,13 @@ export default function App() {
     [sessionId]
   );
 
+  function claimSeat(claimedSeat: Seat, name: string) {
+    if (!sessionId) return;
+    localStorage.setItem(SEAT_KEY(sessionId), claimedSeat);
+    setSeat(claimedSeat);
+    setState(s => ({ ...s, [claimedSeat]: { ...s[claimedSeat], name } }));
+  }
+
   function copyShareLink() {
     void navigator.clipboard.writeText(window.location.href);
     setCopied(true);
@@ -83,23 +95,27 @@ export default function App() {
   }
 
   if (status === 'loading') {
-    return (
-      <div className="wrap">
-        <div className="loading-screen">Loading your session…</div>
-      </div>
-    );
+    return <div className="wrap"><div className="loading-screen">Loading your session…</div></div>;
   }
-
   if (status === 'error') {
     return (
       <div className="wrap">
         <div className="error-screen">
-          <p>Couldn't connect to the server. Is the API running?</p>
+          <p>Couldn't connect to the server.</p>
           <button onClick={() => window.location.reload()}>Retry</button>
         </div>
       </div>
     );
   }
+
+  // Show identity gate until this device has claimed a seat
+  if (!seat) {
+    return <IdentityGate state={state} onClaim={claimSeat} />;
+  }
+
+  const myName    = state[seat].name;
+  const theirSeat: Seat = seat === 'a' ? 'b' : 'a';
+  const theirName = state[theirSeat].name || 'Partner';
 
   return (
     <div className="wrap">
@@ -112,11 +128,12 @@ export default function App() {
       </p>
 
       <div className="session-bar">
-        <span>Share this link with your partner:</span>
+        <span>Share with {theirName === 'Partner' ? 'your partner' : theirName}:</span>
         <span className="share-url">{window.location.href}</span>
         <button onClick={copyShareLink} className={copied ? 'copied' : ''}>
-          {copied ? 'Copied!' : 'Copy'}
+          {copied ? 'Copied!' : 'Copy link'}
         </button>
+        <span className="session-who">You are <strong>{myName}</strong></span>
       </div>
 
       <PhaseNav
@@ -126,14 +143,21 @@ export default function App() {
 
       {state.screen === 'align' && (
         <Align
-          align={state.align}
-          onChange={align => setState(s => ({ ...s, align }))}
+          seat={seat}
+          myName={myName}
+          theirName={theirName}
+          myAnswers={state[seat].alignAnswers}
+          theirAnswers={state[theirSeat].alignAnswers}
+          onChange={alignAnswers => setState(s => ({ ...s, [seat]: { ...s[seat], alignAnswers } }))}
           onNext={() => setState(s => ({ ...s, screen: 'score' }))}
         />
       )}
 
       {state.screen === 'score' && (
         <Score
+          seat={seat}
+          myName={myName}
+          theirName={theirName}
           state={state}
           onChange={setState}
           onBack={() => setState(s => ({ ...s, screen: 'align' }))}
@@ -143,12 +167,16 @@ export default function App() {
 
       {state.screen === 'decide' && (
         <Decide
+          myName={myName}
+          theirName={theirName}
           state={state}
           onChange={setState}
           onBack={() => setState(s => ({ ...s, screen: 'score' }))}
           onReset={() => {
             if (window.confirm('Reset everything? This will clear all entries.')) {
               setState(makeFreshState());
+              if (sessionId) localStorage.removeItem(SEAT_KEY(sessionId));
+              setSeat(null);
             }
           }}
         />

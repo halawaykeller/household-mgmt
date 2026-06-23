@@ -4,16 +4,17 @@ import { SOLUTION_OPTIONS } from '../constants';
 import { offloadCandidates } from '../scoring';
 
 interface Props {
+  myName: string;
+  theirName: string;
   state: AppState;
   onChange: (updater: AppState | ((prev: AppState) => AppState)) => void;
   onBack: () => void;
   onReset: () => void;
 }
 
-// Blank form state for adding a new custom solution
 const EMPTY_FORM = { title: '', pros: '', cons: '' };
 
-export default function Decide({ state, onChange, onBack, onReset }: Props) {
+export default function Decide({ myName, theirName, state, onChange, onBack, onReset }: Props) {
   const [addingForm, setAddingForm] = useState<typeof EMPTY_FORM | null>(null);
   // Track the in-progress comment text per solution id
   const [commentDraft, setCommentDraft] = useState<Record<string, string>>({});
@@ -22,12 +23,15 @@ export default function Decide({ state, onChange, onBack, onReset }: Props) {
   const customSolutions: CustomSolution[] = state.customSolutions ?? [];
   const comments: Record<string, string[]> = state.comments ?? {};
 
-  const candidates = offloadCandidates(state.tasks, state.weights);
-  const heaviest = candidates.slice(0, 3).map(t => t.name);
-  const icky = candidates.filter(t => t.ick >= 2).map(t => t.name);
-  const assignedCount = state.tasks.filter(
-    t => t.assignment !== 'na' && t.assignment !== 'outsource'
-  ).length;
+  // Combine both people's task views to surface offload candidates
+  const allTasks = [...state.a.tasks, ...state.b.tasks];
+  const combinedWeights = { mental: (state.a.weights.mental + state.b.weights.mental) / 2, ick: (state.a.weights.ick + state.b.weights.ick) / 2 };
+  const candidates = offloadCandidates(allTasks, combinedWeights);
+  const seen = new Set<string>();
+  const uniqueCandidates = candidates.filter(t => { const key = t.name; if (seen.has(key)) return false; seen.add(key); return true; });
+  const heaviest = uniqueCandidates.slice(0, 3).map(t => t.name);
+  const icky = uniqueCandidates.filter(t => t.ick >= 2).map(t => t.name);
+  const assignedCount = allTasks.filter(t => t.assignment !== 'na' && t.assignment !== 'outsource').length;
 
   function toggleOption(id: string) {
     onChange(s => ({ ...s, options: { ...s.options, [id]: !s.options[id] } }));
