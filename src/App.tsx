@@ -7,6 +7,7 @@ import PhaseNav from './components/PhaseNav';
 import Align from './components/Align';
 import Score from './components/Score';
 import Decide from './components/Decide';
+import Clippy from './components/Clippy';
 
 const SESSION_KEY = 'household-session-id';
 // Maps sessionId → seat ('a' | 'b') so each device remembers who it is.
@@ -181,6 +182,7 @@ export default function App() {
           }}
         />
       )}
+      <Clippy screen={state.screen} state={state} seat={seat} />
     </div>
   );
 }
