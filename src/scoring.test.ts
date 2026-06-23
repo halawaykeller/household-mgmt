@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { scoreTask, summarize, offloadCandidates } from './scoring';
-import type { Task, AppState } from './types';
+import type { Task } from './types';
 
-const DEFAULT_WEIGHTS: AppState['weights'] = { mental: 1.0, ick: 0.5 };
+const DEFAULT_WEIGHTS = { mental: 1.0, ick: 0.5 };
 
 // Helper to build a minimal Task
 function task(overrides: Partial<Task> & { id?: string }): Task {

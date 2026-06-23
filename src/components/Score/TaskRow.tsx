@@ -1,11 +1,10 @@
 import { useRef } from 'react';
-import type { Task, Assignment } from '../../types';
+import type { Task, Assignment, PersonData } from '../../types';
 import { scoreTask } from '../../scoring';
-import type { AppState } from '../../types';
 
 interface Props {
   task: Task;
-  weights: AppState['weights'];
+  weights: PersonData['weights'];
   onUpdate: (updated: Task) => void;
   onDelete: () => void;
   readOnly?: boolean;

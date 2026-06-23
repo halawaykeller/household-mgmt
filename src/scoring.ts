@@ -1,7 +1,9 @@
 // Pure scoring functions. No React, no side effects.
 // Tests live in scoring.test.ts — run them before touching these formulas.
 
-import type { Task, AppState } from './types';
+import type { Task } from './types';
+
+type Weights = { mental: number; ick: number };
 
 export interface TaskScore {
   monthlyMinutes: number;  // raw time, unweighted
@@ -12,7 +14,7 @@ export interface TaskScore {
 //   monthlyMinutes = minutesPerOccurrence × occurrencesPerMonth
 //   multiplier     = (1 + weights.mental × (mental / 3)) × (1 + weights.ick × (ick / 2))
 //   loadPoints     = monthlyMinutes × multiplier / 10
-export function scoreTask(task: Task, weights: AppState['weights']): TaskScore {
+export function scoreTask(task: Task, weights: Weights): TaskScore {
   const monthlyMinutes = task.minutesPerOccurrence * task.occurrencesPerMonth;
   const multiplier =
     (1 + weights.mental * (task.mental / 3)) *
@@ -38,7 +40,7 @@ export interface ScoreSummary {
 
 // Aggregate per-person totals from the full task list.
 // 'both' splits 50/50; 'outsource' goes to its own bucket; 'na' is excluded.
-export function summarize(tasks: Task[], weights: AppState['weights']): ScoreSummary {
+export function summarize(tasks: Task[], weights: Weights): ScoreSummary {
   let mePoints = 0, meMinutes = 0;
   let partnerPoints = 0, partnerMinutes = 0;
   let outsourcePoints = 0;
@@ -83,7 +85,7 @@ export function summarize(tasks: Task[], weights: AppState['weights']): ScoreSum
 
 // Returns the top offload candidates for the Decide phase:
 // top 3 by load points among assigned tasks, plus any ick≥2 tasks.
-export function offloadCandidates(tasks: Task[], weights: AppState['weights']): Task[] {
+export function offloadCandidates(tasks: Task[], weights: Weights): Task[] {
   const assigned = tasks.filter(t => t.assignment === 'me' || t.assignment === 'partner' || t.assignment === 'both');
 
   const scored = assigned.map(t => ({ task: t, pts: scoreTask(t, weights).loadPoints }));

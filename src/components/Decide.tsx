@@ -14,7 +14,7 @@ interface Props {
 
 const EMPTY_FORM = { title: '', pros: '', cons: '' };
 
-export default function Decide({ myName, theirName, state, onChange, onBack, onReset }: Props) {
+export default function Decide({ myName: _myName, theirName: _theirName, state, onChange, onBack, onReset }: Props) {
   const [addingForm, setAddingForm] = useState<typeof EMPTY_FORM | null>(null);
   // Track the in-progress comment text per solution id
   const [commentDraft, setCommentDraft] = useState<Record<string, string>>({});

@@ -47,7 +47,7 @@ export default function App() {
           session = await createSession(makeFreshState());
         }
 
-        const migratedState = migrateState(session.state as Record<string, unknown>);
+        const migratedState = migrateState(session.state as unknown as Record<string, unknown>);
 
         localStorage.setItem(SESSION_KEY, session.id);
         setSessionIdInUrl(session.id);
