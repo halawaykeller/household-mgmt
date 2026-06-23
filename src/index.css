@@ -470,6 +470,126 @@ details.method[open] > summary::after { content: '－'; }
 .procon .con li { color: var(--muted); }
 .plan textarea { min-height: 80px; }
 
+/* Custom solution delete button */
+.opt-delete {
+  border: 0;
+  background: transparent;
+  color: var(--na);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+  line-height: 1;
+}
+.opt-delete:hover { color: var(--partner); }
+
+/* Comments section inside each solution card */
+.comments {
+  margin-top: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+.comment-list {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+}
+.comment-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 13px;
+  color: var(--ink);
+}
+.comment-del {
+  border: 0;
+  background: transparent;
+  color: var(--na);
+  cursor: pointer;
+  font-size: 11px;
+  flex-shrink: 0;
+  padding: 2px;
+  line-height: 1;
+}
+.comment-del:hover { color: var(--partner); }
+.comment-input {
+  display: flex;
+  gap: 8px;
+}
+.comment-input input {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: var(--body);
+  background: #fff;
+  color: var(--ink);
+}
+.comment-input input:focus { outline: 0; border-color: var(--muted); }
+.comment-input button {
+  font-size: 12px;
+  font-weight: 550;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-family: var(--body);
+  white-space: nowrap;
+}
+.comment-input button:hover { color: var(--ink); border-color: var(--muted); }
+
+/* Add-solution form */
+.add-solution-form {
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  background: var(--surface);
+}
+.add-solution-form label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 12px 0 4px;
+}
+.add-solution-form label:first-of-type { margin-top: 0; }
+.add-solution-form input[type=text] {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: var(--body);
+  color: var(--ink);
+  background: #fff;
+}
+.add-solution-form input[type=text]:focus { outline: 0; border-color: var(--muted); }
+.add-solution-form textarea { min-height: 52px; font-size: 13px; }
+.add-solution-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+/* "Add our own solution" trigger button */
+.add-solution-btn {
+  width: 100%;
+  text-align: left;
+  border: 1px dashed var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-family: var(--body);
+  padding: 11px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+.add-solution-btn:hover { color: var(--ink); border-color: var(--muted); }
+
 /* Mobile */
 @media (max-width: 680px) {
   .beamwrap { transform: scale(.84); transform-origin: top center; height: 100px; }

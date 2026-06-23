@@ -143,6 +143,8 @@ export function makeFreshState(): import('./types').AppState {
     align: ALIGN_QUESTIONS.map(() => ({ you: '', partner: '' })),
     tasks: DEFAULT_TASKS.map((t, i) => ({ id: `t${i}`, ...t })),
     options: Object.fromEntries(SOLUTION_OPTIONS.map(o => [o.id, false])),
+    customSolutions: [],
+    comments: {},
     budgetMonthly: '',
     plan: '',
   };

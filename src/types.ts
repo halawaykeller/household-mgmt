@@ -13,12 +13,22 @@ export interface Task {
   assignment: Assignment;
 }
 
+// A solution card created by the partners (vs the four built-in ones)
+export interface CustomSolution {
+  id: string;
+  title: string;
+  pros: string[];
+  cons: string[];
+}
+
 export interface AppState {
   screen: 'align' | 'score' | 'decide';
   weights: { mental: number; ick: number };   // defaults 1.0 and 0.5
   align: { you: string; partner: string }[];  // one entry per alignment question
   tasks: Task[];
   options: Record<string, boolean>;           // solution id → "we're considering it"
+  customSolutions: CustomSolution[];          // solutions added by the partners
+  comments: Record<string, string[]>;         // solution id → list of comments
   budgetMonthly: string;
   plan: string;
 }
