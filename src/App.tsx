@@ -8,6 +8,7 @@ import Align from './components/Align';
 import Score from './components/Score';
 import Decide from './components/Decide';
 import Clippy from './components/Clippy';
+import OnboardingWizard, { shouldShowWizard } from './components/OnboardingWizard';
 
 const SESSION_KEY = 'household-session-id';
 // Maps sessionId → seat ('a' | 'b') so each device remembers who it is.
@@ -31,6 +32,7 @@ export default function App() {
   const [seat, setSeat] = useState<Seat | null>(null);
   const [state, setStateRaw] = useState<AppState>(makeFreshState());
   const [copied, setCopied] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -87,6 +89,8 @@ export default function App() {
     localStorage.setItem(SEAT_KEY(sessionId), claimedSeat);
     setSeat(claimedSeat);
     setState(s => ({ ...s, [claimedSeat]: { ...s[claimedSeat], name } }));
+    // Show the onboarding wizard the first time a seat is claimed on this device
+    if (shouldShowWizard()) setShowWizard(true);
   }
 
   function copyShareLink() {
@@ -114,9 +118,9 @@ export default function App() {
     return <IdentityGate state={state} onClaim={claimSeat} />;
   }
 
-  const myName    = state[seat].name;
+  const myName     = state[seat].name;
   const theirSeat: Seat = seat === 'a' ? 'b' : 'a';
-  const theirName = state[theirSeat].name || 'Partner';
+  const theirName  = state[theirSeat].name || 'Partner';
 
   return (
     <div className="wrap">
@@ -180,6 +184,14 @@ export default function App() {
               setSeat(null);
             }
           }}
+        />
+      )}
+      {showWizard && (
+        <OnboardingWizard
+          name={myName}
+          partnerName={theirName === 'Partner' ? '' : theirName}
+          seat={seat}
+          onDone={() => setShowWizard(false)}
         />
       )}
       <Clippy screen={state.screen} state={state} seat={seat} />
